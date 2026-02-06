@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="thuni.ng" />
+    <meta property="og:title" content="Dagens custom-samband" />
+    <meta name="viewport" content="initial-scale=1.0">
+    <title>Dagens custom-samband</title>
+    <style>
+      @font-face {
+          font-family: "Anonymous";
+          src: url("AnonymousPro-Regular.woff2");
+      }
+      body {
+          margin: 0;
+          padding: 0;
+          width: 100vw;
+          height: 100vh;
+          font-size: 24px;
+          font-family: Anonymous;
+          color: white;
+          background-color: #050505;
+
+          display: flex;
+          justify-content: center;
+      }
+      main {
+          display: flex;
+          flex-direction: column;
+
+          padding: 0.5rem;
+      }
+      #submit-label {
+          display: block;
+      }
+      #submit {
+          margin-top: 0.5rem;
+      }
+      #submit-field, button {
+          font-family: Anonymous;
+          font-size: 24px;
+      }
+    </style>
+    <script type="module" src="script.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <div id="today">
+        <h2>Today's puzzle</h2>
+        <a id="today-link"
+           href="Placeholder">
+          Placeholder
+        </a>
+      </div>
+      <div id="future">
+        <h2>Submit a puzzle to the queue</h2>
+        <label id="submit-label"
+               for="submit-field">
+          Paste the <em>ID</em> of a
+          <a href="https://connections.swellgarfo.com/">swellgarfo</a>
+          connections puzzle here:
+        </label>
+        <div id="submit">
+          <input id="submit-field"
+                 type="text"
+                 placeholder="-Oki8pANappxd4rmYDli" />
+          <button id="submit-button">Submit</button>
+        </div>
+      </div>
+      <div id="archive">
+        <h2>Archive</h2>
+        <ul id="archive-list">
+        </ul>
+      </div>
+    </main>
+    <template id="archive-item">
+      <li>
+        <span class="date"></span>: <a class="link"></a>
+      </li>
+    </template>
+  </body>
+</html>
