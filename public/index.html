@@ -41,6 +41,12 @@
           font-family: Anonymous;
           font-size: 24px;
       }
+      .success {
+          color: #00cc00;
+      }
+      .error {
+          color: #cc0000;
+      }
     </style>
     <script type="module" src="script.js" defer></script>
   </head>
@@ -52,21 +58,25 @@
            href="Placeholder">
           Placeholder
         </a>
+        <div class="upcoming">
+          There are <span id="upcoming"></span> puzzles in the queue.
+        </div>
       </div>
       <div id="future">
         <h2>Submit a puzzle to the queue</h2>
-        <label id="submit-label"
-               for="submit-field">
-          Paste the <em>ID</em> of a
-          <a href="https://connections.swellgarfo.com/">swellgarfo</a>
-          connections puzzle here:
-        </label>
-        <div id="submit">
+        <form id="submit">
+          <label id="submit-label"
+                 for="submit-field">
+            Paste the <em>ID</em> of a
+            <a href="https://connections.swellgarfo.com/">swellgarfo</a>
+            connections puzzle here:
+          </label>
           <input id="submit-field"
                  type="text"
                  placeholder="-Oki8pANappxd4rmYDli" />
           <button id="submit-button">Submit</button>
-        </div>
+          <span id="result"></span>
+        </form>
       </div>
       <div id="archive">
         <h2>Archive</h2>

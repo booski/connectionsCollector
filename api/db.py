@@ -20,7 +20,7 @@ def evolve(db):
                in db.execute('select `filename` from `evolutions`').fetchall()}
     available = Path('./evolutions').glob('*.sql')
 
-    for sqlfile in available:
+    for sqlfile in sorted(available):
         filename = sqlfile.name
         if filename not in applied:
             print(f'Applying {filename}')
@@ -36,8 +36,7 @@ def evolve(db):
 
 
 def get_db():
-    base = Path(os.path.dirname(__file__)).parent
-    db = sqlite3.connect(base / 'db/data.sqlite',
+    db = sqlite3.connect('./db/data.sqlite',
                          detect_types=sqlite3.PARSE_DECLTYPES)
     db.row_factory = sqlite3.Row
 
