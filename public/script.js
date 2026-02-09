@@ -33,6 +33,7 @@ async function updatePage() {
         .then((data) => {
             configureLink(document.getElementById('today-link'), data.today);
             document.getElementById('upcoming').textContent = data.coming;
+            document.getElementById('author').textContent = '(' + data.author + ')';
             setHistory(data.older);
         });
 }

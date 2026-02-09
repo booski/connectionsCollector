@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import re
 
 from flask import Flask, g, request
 import requests
@@ -38,6 +39,9 @@ def submit_puzzle():
     result = requests.get(
         f'https://connections.swellgarfo.com/game/{puzzle_id}')
     if result.status_code == 200:
+        author_match = re.search(r'"author":"([^"]*)"', result.text)
+        author = author_match.group(1) if author_match else None
+        
         result_row = g.db.execute(
             'SELECT max(`date`) as `date` from `puzzles`').fetchone()
         last_date = date.fromisoformat(result_row['date'])
@@ -45,8 +49,8 @@ def submit_puzzle():
             next_date = now
         else:
             next_date = last_date + timedelta(days=1)
-        g.db.execute('INSERT INTO `puzzles` (`id`, `date`) VALUES (?, ?)',
-                     (puzzle_id, next_date.isoformat()))
+        g.db.execute('INSERT INTO `puzzles` (`id`, `date`, `author`) VALUES (?, ?, ?)',
+                     (puzzle_id, next_date.isoformat(), author))
         g.db.commit()
         return {'result': 'ok'}
     return {'result': 'error'}
