@@ -48,6 +48,12 @@ function setHistory(itemList) {
     const itemListElem = document.getElementById('archive-list');
 
     itemListElem.innerHTML = '';
+    const sortedList = itemList.sort((a, b) => {
+        if (a.date < b.date) {
+            return 1;
+        }
+        return -1;
+    });
     for(const item of itemList) {
         const itemElem = itemTemplate.content.cloneNode(true);
         itemElem.querySelector('.date').textContent = item.date;
