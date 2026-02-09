@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from flask import Flask, g, request
 import requests
+import random
 
 from .db import get_db, evolve
 
@@ -38,15 +39,30 @@ def submit_puzzle():
     result = requests.get(
         f'https://connections.swellgarfo.com/game/{puzzle_id}')
     if result.status_code == 200:
-        result_row = g.db.execute(
-            'SELECT max(`date`) as `date` from `puzzles`').fetchone()
-        last_date = date.fromisoformat(result_row['date'])
-        if last_date < now:
-            next_date = now
+        result_rows = g.db.execute(
+            'SELECT `id`, `date` from `puzzles` WHERE `date` > ? ORDER BY `date` DESC', (now.isoformat(),)).fetchall()
+        if(len(result_rows) > 0):
+            next_date = date.fromisoformat(result_rows[0]['date']) + timedelta(days=1)
         else:
-            next_date = last_date + timedelta(days=1)
+            next_date = now
+
+        all_dates = list(map(lambda row: date.fromisoformat(row['date']), result_rows))
+        all_dates.append(next_date)
+        random.shuffle(all_dates)
+        
+        new_date = all_dates[len(all_dates) - 1]
+
+        # clear out all dates with dummy values to stop the unique constraint from getting in the way
+        for i in range(len(result_rows)):
+            g.db.execute('UPDATE `puzzles` SET `date`=? WHERE `id`=?',
+                         ((date.fromisoformat('8888-12-31') + timedelta(days=i)).isoformat(), result_rows[i]['id']))
+
+        for i in range(len(result_rows)):
+            sql = 'UPDATE `puzzles` SET `date`=? WHERE `id`=?'
+            g.db.execute(sql, (all_dates[i].isoformat(), result_rows[i]['id']))
+
         g.db.execute('INSERT INTO `puzzles` (`id`, `date`) VALUES (?, ?)',
-                     (puzzle_id, next_date.isoformat()))
+                     (puzzle_id, new_date.isoformat()))
         g.db.commit()
         return {'result': 'ok'}
     return {'result': 'error'}
