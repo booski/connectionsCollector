@@ -18,7 +18,7 @@ def before():
 @app.route('/today')
 def get_puzzle_data():
     now = date.today().isoformat()
-    today_result = g.db.execute('SELECT `id` FROM `puzzles` WHERE `date`==?',
+    today_result = g.db.execute('SELECT `id`, `author` FROM `puzzles` WHERE `date`==?',
                                 (now,)).fetchone()
     older_result = g.db.execute('SELECT `date`, `id` FROM `puzzles` WHERE `date`<?',
                                 (now,)).fetchall()
@@ -26,7 +26,8 @@ def get_puzzle_data():
                                  (now,)).fetchall()
     if not coming_result:
         coming_result = []
-    return {'today': today_result['id'],
+    return {'today': {'id': today_result['id'],
+                      'author': today_result['author']},
             'older': [{'date': row['date'],
                        'id': row['id']}
                       for row in older_result],

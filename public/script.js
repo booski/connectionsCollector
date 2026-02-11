@@ -31,9 +31,14 @@ window.addEventListener('DOMContentLoaded', async (event) => {
 async function updatePage() {
     makeRequest('GET', '/today', null)
         .then((data) => {
-            configureLink(document.getElementById('today-link'), data.today);
+            configureLink(document.getElementById('today-link'), data.today.id);
+            const authorElem = document.getElementById('author');
+            if(data.today.author) {
+                authorElem.textContent = data.author;
+            } else {
+                authorElem.parentNode.removeChild(authorElem);
+            }
             document.getElementById('upcoming').textContent = data.coming;
-            document.getElementById('author').textContent = '(' + data.author + ')';
             setHistory(data.older);
         });
 }
