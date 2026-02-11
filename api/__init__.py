@@ -42,8 +42,10 @@ def submit_puzzle():
     if result.status_code != 200:
         return {'result': 'error'}
 
+    author = None
     author_match = re.search(r'"author":"([^"]*)"', result.text)
-    author = author_match.group(1) if author_match else None
+    if author_match:
+        author = author_match.group(1)
         
     result_row = g.db.execute(
         'SELECT max(`date`) as `date` from `puzzles`').fetchone()
