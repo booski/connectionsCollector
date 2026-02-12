@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import random
 import re
 
 from flask import Flask, g, request
@@ -10,6 +11,20 @@ app = Flask('connections')
 evolve(get_db())
 
 
+def get_today(db, now):
+    result = db.execute(
+        'SELECT `id`, `author` FROM `puzzles` WHERE `date`=?', (now,)).fetchone()
+    if result:
+        return result
+
+    result = db.execute(
+        'SELECT `id`, `author`FROM `puzzles` WHERE `date` ISNULL').fetchall()
+    selected = random.choice([row['id'] for row in result])
+    db.execute('UPDATE `puzzles` SET `date`=? WHERE `id`=?',
+               (now, selected))
+    return get_today(db, now)
+
+
 @app.before_request
 def before():
     if 'db' not in g:
@@ -18,12 +33,11 @@ def before():
 @app.route('/today')
 def get_puzzle_data():
     now = date.today().isoformat()
-    today_result = g.db.execute('SELECT `id`, `author` FROM `puzzles` WHERE `date`==?',
-                                (now,)).fetchone()
-    older_result = g.db.execute('SELECT `date`, `id` FROM `puzzles` WHERE `date`<?',
-                                (now,)).fetchall()
-    coming_result = g.db.execute('SELECT `date` FROM `puzzles` WHERE `date`>?',
-                                 (now,)).fetchall()
+    today_result = get_today(g.db, now)
+    older_result = g.db.execute(
+        'SELECT `date`, `id` FROM `puzzles` WHERE `date`<?', (now,)).fetchall()
+    coming_result = g.db.execute(
+        'SELECT `id` FROM `puzzles` WHERE `date` ISNULL').fetchall()
 
     if not today_result:
         today_result = {'id': None,
@@ -54,19 +68,7 @@ def submit_puzzle():
     if author_match:
         author = author_match.group(1)
         
-    result_row = g.db.execute(
-        'SELECT max(`date`) as `date` from `puzzles`').fetchone()
-    try:
-        last_date = date.fromisoformat(result_row['date'])
-        if last_date < now or not last_date:
-            next_date = now
-        else:
-            next_date = last_date + timedelta(days=1)
-    except TypeError:
-        # No date found
-        next_date = now
-
-    g.db.execute('INSERT INTO `puzzles` (`id`, `date`, `author`) VALUES (?, ?, ?)',
-                 (puzzle_id, next_date.isoformat(), author))
+    g.db.execute('INSERT INTO `puzzles` (`id`, `author`) VALUES (?, ?)',
+                 (puzzle_id, author))
     g.db.commit()
     return {'result': 'ok'}
