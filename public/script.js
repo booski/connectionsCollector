@@ -31,13 +31,7 @@ window.addEventListener('DOMContentLoaded', async (event) => {
 async function updatePage() {
     makeRequest('GET', '/today', null)
         .then((data) => {
-            configureLink(document.getElementById('today-link'), data.today.id);
-            const authorElem = document.getElementById('author');
-            if(data.today.author) {
-                authorElem.textContent = data.author;
-            } else {
-                authorElem.parentNode.removeChild(authorElem);
-            }
+            setToday(data.today);
             document.getElementById('upcoming').textContent = data.coming;
             setHistory(data.older);
         });
@@ -49,9 +43,35 @@ function configureLink(linkElem, id) {
     linkElem.textContent = link;
 }
 
+function setToday(todayItem) {
+    if(!todayItem.id) {
+        return;
+    }
+
+    const todayElem = document.getElementById('today-link');
+    const linkTemplate = document.getElementById('today-template');
+    const newLink = document.createElement('a');
+    newLink.setAttribute('id', 'today-link');
+
+    configureLink(newLink, todayItem.id);
+    todayElem.replaceWith(newLink);
+
+    const authorElem = document.getElementById('author');
+    if(todayItem.author) {
+        authorElem.textContent = todayItem.author;
+    } else {
+        authorElem.parentNode.removeChild(authorElem);
+    }
+}
+
 function setHistory(itemList) {
     const itemTemplate = document.getElementById('archive-item');
     const itemListElem = document.getElementById('archive-list');
+
+    if(itemList.length == 0) {
+        itemListElem.replaceWith('No old puzzles available');
+        return;
+    }
 
     itemListElem.innerHTML = '';
     const sortedList = itemList.sort((a, b) => {

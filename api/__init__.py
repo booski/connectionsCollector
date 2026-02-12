@@ -12,7 +12,7 @@ evolve(get_db())
 
 @app.before_request
 def before():
-    if db not in g:
+    if 'db' not in g:
         g.db = get_db()
 
 @app.route('/today')
@@ -24,8 +24,15 @@ def get_puzzle_data():
                                 (now,)).fetchall()
     coming_result = g.db.execute('SELECT `date` FROM `puzzles` WHERE `date`>?',
                                  (now,)).fetchall()
+
+    if not today_result:
+        today_result = {'id': None,
+                        'author': None}
+    if not older_result:
+        older_result = []
     if not coming_result:
         coming_result = []
+
     return {'today': {'id': today_result['id'],
                       'author': today_result['author']},
             'older': [{'date': row['date'],
@@ -49,11 +56,16 @@ def submit_puzzle():
         
     result_row = g.db.execute(
         'SELECT max(`date`) as `date` from `puzzles`').fetchone()
-    last_date = date.fromisoformat(result_row['date'])
-    if last_date < now:
+    try:
+        last_date = date.fromisoformat(result_row['date'])
+        if last_date < now or not last_date:
+            next_date = now
+        else:
+            next_date = last_date + timedelta(days=1)
+    except TypeError:
+        # No date found
         next_date = now
-    else:
-        next_date = last_date + timedelta(days=1)
+
     g.db.execute('INSERT INTO `puzzles` (`id`, `date`, `author`) VALUES (?, ?, ?)',
                  (puzzle_id, next_date.isoformat(), author))
     g.db.commit()
