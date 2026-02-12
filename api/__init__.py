@@ -11,6 +11,10 @@ app = Flask('connections')
 evolve(get_db())
 
 
+class ValidationException(Exception):
+    pass
+
+
 def get_today(db, now):
     result = db.execute(
         'SELECT `id`, `author` FROM `puzzles` WHERE `date`=?', (now,)).fetchone()
@@ -22,13 +26,28 @@ def get_today(db, now):
     selected = random.choice([row['id'] for row in result])
     db.execute('UPDATE `puzzles` SET `date`=? WHERE `id`=?',
                (now, selected))
+    db.commit()
     return get_today(db, now)
+
+
+def get_author(puzzle_id):
+    result = requests.get(
+        f'https://connections.swellgarfo.com/game/{puzzle_id}')
+    if result.status_code != 200:
+        raise ValidationException()
+
+    author = None
+    author_match = re.search(r'"author":"([^"]*)"', result.text)
+    if author_match:
+        author = author_match.group(1)
+    return author
 
 
 @app.before_request
 def before():
     if 'db' not in g:
         g.db = get_db()
+
 
 @app.route('/today')
 def get_puzzle_data():
@@ -39,34 +58,36 @@ def get_puzzle_data():
     coming_result = g.db.execute(
         'SELECT `id` FROM `puzzles` WHERE `date` ISNULL').fetchall()
 
-    if not today_result:
-        today_result = {'id': None,
-                        'author': None}
+    if today_result:
+        today_item = {'id': today_result['id'],
+                      'author': today_result['author']}
+        if not today_item['author']:
+            # Fallback for old puzzles lacking stored author
+            today_item['author'] = get_author(today_item['id'])
+    else:
+        today_item = {'id': None,
+                      'author': None}
+
     if not older_result:
         older_result = []
     if not coming_result:
         coming_result = []
 
-    return {'today': {'id': today_result['id'],
-                      'author': today_result['author']},
+    return {'today': today_item,
             'older': [{'date': row['date'],
                        'id': row['id']}
                       for row in older_result],
             'coming': len(coming_result)}
 
+
 @app.route('/submit', methods=['PUT'])
 def submit_puzzle():
     puzzle_id = request.json['id']
-    now = date.today()
-    result = requests.get(
-        f'https://connections.swellgarfo.com/game/{puzzle_id}')
-    if result.status_code != 200:
-        return {'result': 'error'}
 
-    author = None
-    author_match = re.search(r'"author":"([^"]*)"', result.text)
-    if author_match:
-        author = author_match.group(1)
+    try:
+        author = get_author(puzzle_id)
+    except ValidationException:
+        return {'result': 'error'}
         
     g.db.execute('INSERT INTO `puzzles` (`id`, `author`) VALUES (?, ?)',
                  (puzzle_id, author))
