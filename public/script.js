@@ -37,10 +37,9 @@ async function updatePage() {
         });
 }
 
-function configureLink(linkElem, id) {
-    const link = swellgarfo + id;
-    linkElem.setAttribute('href', link);
-    linkElem.textContent = link;
+function configureLink(linkElem, puzzleId, linkTitle) {
+    linkElem.setAttribute('href', swellgarfo + puzzleId);
+    linkElem.textContent = linkTitle;
 }
 
 function setToday(todayItem) {
@@ -53,15 +52,10 @@ function setToday(todayItem) {
     const newLink = document.createElement('a');
     newLink.setAttribute('id', 'today-link');
 
-    configureLink(newLink, todayItem.id);
+    configureLink(newLink,
+                  todayItem.id,
+                  todayItem.title + ' by ' + todayItem.author);
     todayElem.replaceWith(newLink);
-
-    const authorElem = document.getElementById('author');
-    if(todayItem.author) {
-        authorElem.textContent = todayItem.author;
-    } else {
-        authorElem.parentNode.removeChild(authorElem);
-    }
 }
 
 function setHistory(itemList) {
@@ -83,7 +77,9 @@ function setHistory(itemList) {
     for(const item of itemList) {
         const itemElem = itemTemplate.content.cloneNode(true);
         itemElem.querySelector('.date').textContent = item.date;
-        configureLink(itemElem.querySelector('.link'), item.id);
+        configureLink(itemElem.querySelector('.link'),
+                      item.id,
+                      item.title + ' by ' + item.author);
         itemListElem.appendChild(itemElem);
     }
 }
